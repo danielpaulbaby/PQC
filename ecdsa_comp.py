@@ -16,7 +16,7 @@ from ecdsa.util import sigencode_der
  
 CURVE = ec.SECP384R1()
 DIGEST = hashes.SHA384()
-_HASHFUNC = hashlib.sha384  # must match DIGEST above
+_HASHFUNC = hashlib.sha384  
  
  
 @dataclass

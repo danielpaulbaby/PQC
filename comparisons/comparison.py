@@ -18,8 +18,6 @@ def time_it(fn, *args, repeats=20, **kwargs):
  
  
 def strip_ecdsa_component(module_name, sig, category):
-    """Extract just the ECDSA component bytes from a combined signature,
-    per each module's own wire format."""
     if module_name == "nested":
         import struct
         (mldsa_len,) = struct.unpack(">I", sig[:4])
@@ -48,9 +46,6 @@ def run_comparison(category: str):
         print(f"  sign    : {sign_ms:.2f} ms")
         print(f"  verify  : {verify_ms:.2f} ms  (correct sig verifies: {ok})")
  
-        # The actual security property comparison: can the ECDSA component
-        # be lifted out and used as a valid STANDALONE ECDSA signature over
-        # the plain message, with no knowledge of the hybrid scheme at all?
         ecdsa_component = strip_ecdsa_component("nested" if label == "NESTED" else "simple", sig, category)
         try:
             kp.ecdsa_public.verify(ecdsa_component, msg, ec.ECDSA(module.CATEGORIES[category].crypto_hash))

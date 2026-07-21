@@ -11,7 +11,6 @@ from cryptography.x509.oid import NameOID
  
 import nested
  
-# Custom, project-specific extension OID -- NOT IANA-registered.
 HYBRID_EXTENSION_OID = x509.ObjectIdentifier("1.3.6.1.4.1.99999.1.1")
  
  
@@ -23,12 +22,7 @@ def _canonical_payload(
     not_before: datetime.datetime,
     not_after: datetime.datetime,
 ) -> bytes:
-    """
-    Fixed, extension-independent payload the hybrid signature covers.
-    Built the same way at encode time and verify time -- never from
-    tbs_certificate_bytes, to avoid the circular-dependency bug this
-    module originally hit.
-    """
+
     ecdsa_pub_der = ecdsa_public.public_bytes(
         encoding=serialization.Encoding.DER,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -54,7 +48,7 @@ def encode_certificate(
     category: str = nested.DEFAULT_CATEGORY,
     valid_days: int = 365,
 ) -> bytes:
-    """Builds a self-signed hybrid certificate. Returns PEM bytes."""
+
     subject = issuer = x509.Name([
         x509.NameAttribute(NameOID.COMMON_NAME, subject_common_name),
     ])
@@ -89,7 +83,6 @@ def encode_certificate(
  
  
 def parse_hybrid_extension(cert: x509.Certificate) -> tuple[bytes, bytes]:
-    """Extracts (mldsa_public_key, hybrid_signature) from the custom extension."""
     ext = cert.extensions.get_extension_for_oid(HYBRID_EXTENSION_OID)
     value = ext.value.value
  
@@ -107,11 +100,6 @@ def parse_hybrid_extension(cert: x509.Certificate) -> tuple[bytes, bytes]:
  
  
 def verify_certificate(pem_bytes: bytes, category: str = nested.DEFAULT_CATEGORY) -> dict:
-    """
-    Full hybrid verification. Returns a dict of individual check results
-    plus an overall 'valid' bool, so a caller/report can see which layer
-    failed, not just pass/fail.
-    """
     cert = x509.load_pem_x509_certificate(pem_bytes)
     ecdsa_public = cert.public_key()
  
@@ -154,9 +142,7 @@ if __name__ == "__main__":
     result = verify_certificate(pem, category="category3")
     print("Verification result:", result)
  
-    # Tamper test: flip a byte inside the certificate's extension data
-    # (simulating a corrupted/forged cert) and confirm it's rejected.
-    tampered_pem = pem.replace(b"MI", b"NJ", 1)  # crude corruption of the base64 body
+    tampered_pem = pem.replace(b"MI", b"NJ", 1)  
     try:
         tampered_result = verify_certificate(tampered_pem, category="category3")
     except Exception as e:
